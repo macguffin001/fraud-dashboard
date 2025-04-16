@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fraud Detection Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Fraud Detection</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="mb-4 text-center">Fraud Detection Data</h1>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Customer Name</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Fraud Flag Reason</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fraud-table-body">
+                        <!-- Dynamically filled by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <p class="mt-4 text-center text-muted">
+            This page is hosted on the web server at <code>/var/www/18.206.35.123/index.html</code>
+        </p>
+    </div>
+
+    <!-- JavaScript to Load Data and Handle Actions -->
+    <script>
+        // Load data from intermediate server and populate table
+        $.ajax({
+            url: 'http://3.211.48.192/html_view.php', // Intermediate server
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                const tbody = document.getElementById('fraud-table-body');
+                data.forEach(entry => {
+                    const safeReason = (entry.Flag_Reason || '').replace(/'/g, "\\'");
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${entry.Action_Transaction_ID}</td>
+                        <td>${entry.Customer_Name}</td>
+                        <td>$${parseFloat(entry.Transaction_Amount).toFixed(2)}</td>
+                        <td>${entry.Transaction_Fraud_Flag}</td>
+                        <td>${entry.Flag_Reason}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="performAction(${entry.Action_Transaction_ID}, 'markFraud', '${safeReason}')">Mark as Fraudulent</button>
+                            <button class="btn btn-warning btn-sm" onclick="performAction(${entry.Action_Transaction_ID}, 'refund', '')">Issue Refund</button>
+                            <button class="btn btn-info btn-sm" onclick="performAction(${entry.Action_Transaction_ID}, 'escalate', '')">Escalate</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            },
+            error: function() {
+                alert('Failed to fetch fraud data.');
+            }
+        });
+
+        // Send action requests
+        function performAction(transactionId, actionType, fraudReason) {
+            $.ajax({
+                url: 'http://3.211.48.192/perform_action.php',
+                method: 'POST',
+                data: {
+                    transaction_id: transactionId,
+                    action_type: actionType,
+                    fraud_reason: fraudReason
+                },
+                success: function(response) {
+                    alert('Action performed: ' + actionType);
+                    location.reload();
+                },
+                error: function() {
+                    alert('Error performing action');
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
+
