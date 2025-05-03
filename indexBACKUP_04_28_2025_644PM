@@ -40,15 +40,13 @@
                 </table>
             </div>
         </div>
-
-        <!--this is where we call api ipapi for geolocation (it was the only free one) -->
-        <div class="mt-5">
+    <!--this is where we call api ipapi for geolocation (it was the only free one) -->
+    <div class="mt-5">
             <h5 class="text-center">Visitor Info (from ipapi.co)</h5>
             <ul class="list-group" id="geo-info">
                 <li class="list-group-item text-center text-muted">Loading location info...</li>
             </ul>
         </div>
-
         <p class="mt-4 text-center text-muted">
             This page is hosted on the web server at <code>/var/www/18.206.35.123/index.html</code>
         </p>
@@ -63,12 +61,12 @@
             dataType: 'json',
             success: function(data) {
                 const tbody = document.getElementById('fraud-table-body');
-                tbody.innerHTML = '';
+ tbody.innerHTML = '';
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No fraud records found.</td></tr>';
                     return;
                 }              
-                data.forEach(entry => {
+  data.forEach(entry => {
                     const safeReason = (entry.Flag_Reason || '').replace(/'/g, "\\'");
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -78,40 +76,12 @@
                         <td>${entry.Transaction_Fraud_Flag}</td>
                         <td>${entry.Flag_Reason}</td>
                         <td>
-                            <!-- Mark as Fraudulent Button -->
-                            <button id="mark-fraudulent-btn-${entry.Action_Transaction_ID}" class="btn btn-danger btn-sm">Mark as Fraudulent</button>
+                            <button class="btn btn-danger btn-sm" onclick="performAction(${entry.Action_Transaction_ID}, 'markFraud', '${safeReason}')">Mark as Fraudulent</button>
                             <button class="btn btn-warning btn-sm" onclick="performAction(${entry.Action_Transaction_ID}, 'refund', '')">Issue Refund</button>
                             <button class="btn btn-info btn-sm" onclick="performAction(${entry.Action_Transaction_ID}, 'escalate', '')">Escalate</button>
                         </td>
                     `;
                     tbody.appendChild(row);
-
-                    // Attach the click event for "Mark as Fraudulent"
-                    $(`#mark-fraudulent-btn-${entry.Action_Transaction_ID}`).click(function() {
-                        var transactionData = {
-                            Transaction_ID: entry.Action_Transaction_ID,
-                            Customer_Name: entry.Customer_Name,
-                            Transaction_Amount: entry.Transaction_Amount,
-                            Transaction_Fraud_Flag: entry.Transaction_Fraud_Flag,
-                            Flag_Reason: entry.Flag_Reason
-                        };
-
-                        // Send data to mark_fraudulent.php
-                        $.ajax({
-                            url: 'https://18.206.35.123/mark_fraudulent.php', // Webserver URL
-                            method: 'POST',
-                            data: JSON.stringify(transactionData), // Send the data as JSON
-                            contentType: 'application/json',
-                            success: function(response) {
-                                alert('Transaction marked as fraudulent!');
-                                console.log(response);
-                                location.reload(); // Optional: Reload to reflect changes
-                            },
-                            error: function() {
-                                alert('Error marking as fraudulent');
-                            }
-                        });
-                    });
                 });
             },
             error: function() {
@@ -119,7 +89,7 @@
             }
         });
 
-        // Send action requests for refund or escalate
+        // Send action requests
         function performAction(transactionId, actionType, fraudReason) {
             $.ajax({
                 url: 'http://3.211.48.192/perform_action.php',
@@ -137,10 +107,9 @@
                     alert('Error performing action');
                 }
             });
-        }
-
-        // API integration for visitor info
-        $.get('https://ipapi.co/json/', function(data) {
+        } 
+    //this is the api integration
+         $.get('https://ipapi.co/json/', function(data) {
             $('#geo-info').html(`
                 <li class="list-group-item"><strong>IP:</strong> ${data.ip}</li>
                 <li class="list-group-item"><strong>City:</strong> ${data.city}</li>
